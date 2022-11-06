@@ -1,0 +1,20 @@
+Test task for the position of a full-stack JavaScript developer
+
+Goal
+Develop a simple warehouse accounting system. The system should consist of backend and frontend parts. The backend part should be an API for CRUD operations, the frontend part should be a simple UI for viewing and manipulating this data.
+
+Functional
+Viewing the list of products;
+Viewing the list of warehouses;
+Adding/deleting/editing products;
+Adding/deleting/editing warehouses;
+Movement of goods between warehouses.
+
+Terms
+The application must be written using the React library (front) and Node.js (back). There are no other restrictions.
+When adding / editing products, it should be possible to set the number of product units.
+When setting the number of units of production, it is necessary to be able to set the distribution by warehouses, as well as leave a certain number (or all) unallocated.
+When a product is removed, it must be removed from all warehouses and the  notification about it must be appeared.
+When adding / editing a warehouse, it should be possible to immediately specify products from unallocated product stocks.
+When deleting a warehouse, it should be possible to move the item to a specific warehouse or leave it unallocated.
+
