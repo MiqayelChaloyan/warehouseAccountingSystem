@@ -40,7 +40,11 @@ function Products() {
     const [Item, setItem] = useState('');
     const [openDialog, setOpenDialog] = useState(false);
     const [openTransferDialog, setOpenTransferDialog] = useState(false);
-    const [products, setProducts] = useState({ production_date: currentDate() });
+    const [products, setProducts] = useState({
+        production_date: currentDate(),
+        barcode: 0,
+        quantity: 0
+    });
     const [query, setSearchQuery] = useState('');
     const [pending, setPending] = useState(true);
     const [openBackdrop, setOpenBackdrop] = useState(false);
@@ -135,7 +139,7 @@ function Products() {
         try {
             const res = await updateProduct(products.id, products);
             if (res?.status === 200) {
-                handleToggleBackdrop(); ///////////////onload
+                handleToggleBackdrop();
                 setOpen(false);
                 handleClick();
                 return;
@@ -170,7 +174,6 @@ function Products() {
         try {
             const res = await deleteProduct(Item);
             if (res?.status === 200) {
-                handleToggleBackdrop();///////////////onload
                 setData(data.filter(item => item.id !== Item));
                 setOpenDialog(false);
                 handleClick();
@@ -194,7 +197,7 @@ function Products() {
 
     const checkFields = () => {
         return (!products.name || !products.category || !products.barcode
-            || typeof (products.barcode) !== "number" || !products.production_date
+            || !products.production_date
             || !products.quantity || products.quantity < 0);
     }
 
@@ -315,7 +318,7 @@ function Products() {
                         type="number"
                         fullWidth
                         variant="standard"
-                        defaultValue=""
+                        defaultValue={0}
                         InputProps={{
                             inputProps: { min: 0 }
                         }}

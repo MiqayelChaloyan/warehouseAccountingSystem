@@ -117,7 +117,7 @@ function Warehouses() {
         try {
             const res = await updateWarehouse(warehouse.id, warehouse);
             if (res?.status === 200) {
-                handleToggleBackdrop();//////////////////onload
+                handleToggleBackdrop();
                 setOpen(false);
                 handleClick();
                 return;
@@ -136,7 +136,6 @@ function Warehouses() {
         try {
             const res = await createWarehouse(newWarehouse);
             if (res?.status === 200) {
-                handleToggleBackdrop();/////////////////onload
                 setOpenAdd(false);
                 handleClick();
                 setNewWarehouse({});
@@ -151,7 +150,6 @@ function Warehouses() {
     const deleteItems = async () => {
         try {
             await deleteWarehouse(deleteItem)
-            handleToggleBackdrop();//////////////////onload
             setData(data.filter(item => item.id !== deleteItem));
             setOpenDialog(false);
             handleClick();
