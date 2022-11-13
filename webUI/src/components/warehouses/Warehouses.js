@@ -1,82 +1,81 @@
+import { useEffect, useState, useCallback } from 'react';
 import DataTable from 'react-data-table-component';
-import { AiFillEdit, AiFillDelete, AiFillPlusSquare } from 'react-icons/ai'
+import { AiFillEdit, AiFillDelete } from 'react-icons/ai'
 import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogTitle from '@mui/material/DialogTitle';
-import Box from '@mui/material/Box';
-import LinearProgress from '@mui/material/LinearProgress';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import ButtonGroup from '@mui/material/ButtonGroup';
-import DialogContentText from '@mui/material/DialogContentText';
-import Paper from '@mui/material/Paper';
-import InputBase from '@mui/material/InputBase';
-import SearchIcon from '@mui/icons-material/Search';
-import Backdrop from '@mui/material/Backdrop';
-import CircularProgress from '@mui/material/CircularProgress';
 
-import { useEffect, useState } from 'react';
 import { getWarehouses, deleteWarehouse, updateWarehouse, createWarehouse } from '../../utils/ApiUtils';
 import { WAREHOUSES_TABLE_COLUMS } from '../../constans/UIConstans';
-import { MainStyles, Styles } from './Style.js';
 import ExpandedComponent from './ExpandedComponent';
+import Header from './Header';
+import Add from './dialogs/Add';
+import Update from './dialogs/Update';
+import Delete from './dialogs/Delete';
+import Onload from '../onload/Onload';
+import { MainStyles, Styles } from './Style';
 
 
 function Warehouses() {
 
     const [data, setData] = useState([]);
-    const [open, setOpen] = useState(false);
-    const [errorMessage, setErrorMessage] = useState(false);
-    const [openAdd, setOpenAdd] = useState(false);
     const [openAlert, setOpenAlert] = useState(false);
     const [deleteItem, setDeleteItem] = useState('');
-    const [openDialog, setOpenDialog] = useState(false);
-    const [warehouse, setWarehouse] = useState({});
-    const [query, setSearchQuery] = useState('');
-    const [pending, setPending] = useState(true);
     const [openBackdrop, setOpenBackdrop] = useState(false);
-    const [newWarehouse, setNewWarehouse] = useState({});
     const [openErr, setOpenErr] = useState(false);
+    const [pending, setPending] = useState(true);
+    const [query, setSearchQuery] = useState('');
+    const [openAdd, setOpenAdd] = useState(false);
+    const [errorMessage, setErrorMessage] = useState(false);
+    const [newWarehouse, setNewWarehouse] = useState({});
+    const [open, setOpen] = useState(false);
+    const [warehouse, setWarehouse] = useState({});
+    const [openDialog, setOpenDialog] = useState(false);
+
 
     useEffect(() => {
-        loadData();
-        const timeout = setTimeout(() => {
-            setPending(false);
-        }, 1000);
-        return () => clearTimeout(timeout);
+        loadData()
+            .catch(() => setOpenErr(true))
+            .finally(() => setPending(false));
     }, [openAdd, openDialog]);
 
-    const handleClose = () => {
+    const openDialogADD = useCallback(() => {
+        setOpenAdd(true);
+    }, []);
+
+    const handleClose = useCallback(() => {
         setOpen(false);
         setOpenAdd(false);
         setOpenAlert(false);
         setOpenDialog(false);
         setErrorMessage(false);
-    }
+    }, []);
 
-    const handleOnChange = (event) => {
+    const handleOnChange = useCallback((event) => {
         const key = event.target.id;
         const value = event.target.value;
         warehouse[key] = value;
-    }
+    }, [warehouse]);
 
-    const handleOnChangeNew = (event) => {
+    const openDialogUpdate = useCallback((event) => {
+        setWarehouse(data.filter(el => el.id == event.currentTarget.id)[0]);
+        setOpen(true);
+    }, [data]);
+
+    const handleOnChangeNew = useCallback((event) => {
         const key = event.target.id;
         const value = event.target.value;
         newWarehouse[key] = value;
-    }
+    }, [newWarehouse]);
 
-    const openDialogUpdate = (event) => {
-        setWarehouse(data.filter(el => el.id == event.currentTarget.id)[0])
-        setOpen(true)
-    }
-
-    const openDialogDelete = (event) => {
+    const openDialogDelete = useCallback((event) => {
         setDeleteItem(event.currentTarget.id);
         setOpenDialog(true);
+    }, []);
+
+    const handleClick = () => {
+        setOpenAlert(true);
     }
 
     const colums = [...WAREHOUSES_TABLE_COLUMS,
@@ -123,7 +122,7 @@ function Warehouses() {
                 return;
             }
         } catch (err) {
-            setOpenErr(true)
+            setOpenErr(true);
         }
     }
 
@@ -142,28 +141,20 @@ function Warehouses() {
                 return;
             }
         } catch (err) {
-            setOpenErr(true)
+            setOpenErr(true);
         }
     }
 
     // DELETE
     const deleteItems = async () => {
         try {
-            await deleteWarehouse(deleteItem)
+            await deleteWarehouse(deleteItem);
             setData(data.filter(item => item.id !== deleteItem));
             setOpenDialog(false);
             handleClick();
         } catch (err) {
-            setOpenErr(true)
+            setOpenErr(true);
         }
-    }
-
-    const openDialogAdd = () => {
-        setOpenAdd(true);
-    }
-
-    const handleClick = () => {
-        setOpenAlert(true);
     }
 
     //  Search Bar
@@ -178,207 +169,17 @@ function Warehouses() {
     const searchData = filterData();
 
     // ONLOAD
-    const onload = () => {
-        return (
-            <Backdrop
-                sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
-                open={openBackdrop}
-            >
-                {handleCloseBackdrop()}
-                <CircularProgress color="inherit" />
-            </Backdrop>
-        )
-    }
-
-    const handleCloseBackdrop = () => {
-        const timeout = setTimeout(() => {
-            setOpenBackdrop(false);
-            clearTimeout(timeout)
-        }, 1200);
-    };
-
     const handleToggleBackdrop = () => {
         setOpenBackdrop(open);
     };
 
-    //  Render Dialogs
-    const renderAddDialog = () => {
-        return (
-            <Dialog open={openAdd} onClose={handleClose}>
-                <Box sx={{ width: '100%' }}>
-                    <LinearProgress color="success" />
-                </Box>
-                <DialogTitle> Create new Item </DialogTitle>
-                <DialogContent>
-                    <TextField
-                        autoFocus
-                        margin="dense"
-                        id="name"
-                        label={
-                            errorMessage && !newWarehouse.name ?
-                                <label style={Styles.error}> Name cannot be empty </label> :
-                                'Name'
-                        }
-                        type="text"
-                        fullWidth
-                        variant="standard"
-                        defaultValue=''
-                        onChange={handleOnChangeNew}
-
-                    />
-                    <TextField
-                        autoFocus
-                        margin="dense"
-                        id="address"
-                        label={
-                            errorMessage && !newWarehouse.address ?
-                                <label style={Styles.error}> Address cannot be empty </label> :
-                                'Address'
-                        }
-                        type="text"
-                        fullWidth
-                        variant="standard"
-                        defaultValue=''
-                        onChange={handleOnChangeNew}
-                    />
-                    <TextField
-                        autoFocus
-                        margin="dense"
-                        id="phone"
-                        label={
-                            errorMessage && !newWarehouse.phone ?
-                                <label style={Styles.error}> Phone cannot be empty </label> :
-                                'Phone'
-                        }
-                        type="text"
-                        fullWidth
-                        variant="standard"
-                        defaultValue=''
-                        onChange={handleOnChangeNew}
-                    />
-                </DialogContent>
-
-                <DialogActions>
-                    <Button onClick={handleClose}> Cancel </Button>
-                    <Button onClick={addWarehouse}> Create </Button>
-                </DialogActions>
-            </Dialog>
-        );
-    };
-
-    const renderUpdateDialog = () => {
-        return (
-            <Dialog open={open} onClose={handleClose}>
-                <Box sx={{ width: '100%' }}>
-                    <LinearProgress />
-                </Box>
-                <DialogTitle>Warehouse #{warehouse.id}</DialogTitle>
-                <DialogContent>
-                    <TextField
-                        autoFocus
-                        margin="dense"
-                        id="name"
-                        label={
-                            errorMessage && warehouse.name === '' ?
-                                <label style={Styles.error}> Name cannot be empty </label> :
-                                'Name'
-                        }
-                        type="text"
-                        fullWidth
-                        variant="standard"
-                        defaultValue={warehouse.name}
-                        onChange={handleOnChange}
-                    />
-                    <TextField
-                        autoFocus
-                        margin="dense"
-                        id="address"
-                        label={
-                            errorMessage && warehouse.address === '' ?
-                                <label style={Styles.error}> Address cannot be empty </label> :
-                                'Address'
-                        }
-                        type="text"
-                        fullWidth
-                        variant="standard"
-                        defaultValue={warehouse.address}
-                        onChange={handleOnChange}
-                    />
-                    <TextField
-                        autoFocus
-                        margin="dense"
-                        id="phone"
-                        label={
-                            errorMessage && warehouse.phone === '' ?
-                                <label style={Styles.error}> Phone cannot be empty </label> :
-                                'Phone'
-                        }
-                        type="text"
-                        fullWidth
-                        variant="standard"
-                        defaultValue={warehouse.phone}
-                        onChange={handleOnChange}
-                    />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleClose}> Cancel </Button>
-                    <Button onClick={changeWarehouse}> Update </Button>
-                </DialogActions>
-            </Dialog>
-
-        );
-    };
-
-    const renderDeleteDialog = () => {
-        return (
-            <Dialog
-                open={openDialog}
-                onClose={handleClose}
-                aria-labelledby="alert-dialog-title"
-                aria-describedby="alert-dialog-description"
-            >
-                <LinearProgress color="inherit" />
-                <DialogTitle id="alert-dialog-title">
-                    {"Confirm if you want to delete ?"}
-                </DialogTitle>
-                <DialogContent>
-                    <DialogContentText id="alert-dialog-description">
-                        Once deleted, you can no longer restore.
-                    </DialogContentText>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleClose}> Cancel </Button>
-                    <Button onClick={deleteItems}> Delete </Button>
-                </DialogActions>
-            </Dialog>
-        );
-    };
-
-    const renderOpendialogHeader = () => {
-        return (
-            <div style={Styles.addContainer}>
-                <Button onClick={openDialogAdd} variant="text"><AiFillPlusSquare style={Styles.addButton} /> Add </Button>
-                <Paper
-                    component="form"
-                    style={Styles.search.papper}
-                >
-                    <InputBase
-                        style={Styles.search.inputBase}
-                        placeholder="Search.."
-                        inputProps={{ 'aria-label': 'search' }}
-                        onInput={(e) => setSearchQuery(e.target.value)}
-                    />
-                    <SearchIcon />
-                </Paper>
-            </div>
-        );
-    };
-
-
-
     return (
         <>
-            {renderOpendialogHeader()}
+            <Header
+                openDialogADD={openDialogADD}
+                setSearchQuery={setSearchQuery}
+            />
+
             <DataTable
                 title="Warehouse List"
                 columns={colums}
@@ -392,14 +193,40 @@ function Warehouses() {
                 expandableRowsComponent={ExpandedComponent}
                 progressPending={pending}
                 customStyles={MainStyles}
+                expandOnRowClicked
+                noDataComponent={<div> No warehouses to show</div>}
             />
 
-            {renderUpdateDialog()}
-            {renderAddDialog()}
-            {renderDeleteDialog()}
-            {onload()}
+            <Add
+                openAdd={openAdd}
+                errorMessage={errorMessage}
+                newWarehouse={newWarehouse}
+                handleClose={handleClose}
+                handleOnChangeNew={handleOnChangeNew}
+                addWarehouse={addWarehouse}
+            />
 
-            <Snackbar open={openAlert} autoHideDuration={2000} onClose={handleClose}>
+            <Update
+                open={open}
+                warehouse={warehouse}
+                errorMessage={errorMessage}
+                handleClose={handleClose}
+                handleOnChange={handleOnChange}
+                changeWarehouse={changeWarehouse}
+            />
+
+            <Delete
+                openDialog={openDialog}
+                handleClose={handleClose}
+                deleteItems={deleteItems}
+            />
+
+            <Onload
+                openBackdrop={openBackdrop}
+                setOpenBackdrop={setOpenBackdrop}
+            />
+
+            <Snackbar open={openAlert} autoHideDuration={1200} onClose={handleClose}>
                 <Alert onClose={handleClose} severity="success" style={Styles.alert}>
                     Done successfully!
                 </Alert>

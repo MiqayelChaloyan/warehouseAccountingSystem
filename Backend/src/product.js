@@ -2,15 +2,10 @@ import connection from '../configs/config.js';
 
 //Read
 //GET an products
-export const getProducts = (_, res) => {
+export const getProducts = async (_, res) => {
     try {
-        connection.query('SELECT * FROM products', (err, rows) => {
-            if (err) {
-                res.status(400).send({error: "Operation Failed!"});
-                return
-            }
-            res.status(200).send(rows);
-        })
+        const [rows] = await connection.execute('SELECT * FROM products');
+        res.status(200).send(rows);
     } catch (error) {
         res.status(400).send(error.message);
     }
@@ -18,23 +13,13 @@ export const getProducts = (_, res) => {
 
 //Read
 //GET an product/:id
-export const getProductId = (req, res) => {
+export const getProductId = async (req, res) => {
     const { id } = req?.params;
     try {
-        connection.query('SELECT * FROM products WHERE id = ?', id, (err, row) => {
-            if (err) {
-                res.status(400).send({error: "Operation Failed!"});
-                return
-            }
-            connection.query('SELECT * FROM prod_warehouse INNER JOIN warehouses ON warehouses.id=prod_warehouse.warehouse_id WHERE product_id = ?',
-                id, (error, products) => {
-                    if (error) {
-                        res.status(400).send({error: "Operation Failed!"});
-                        return
-                    }
-                    res.status(200).send({ ...row, products });
-                })
-        })
+        const [row] = await connection.execute('SELECT * FROM products WHERE id = ?', [id]);
+        const [warehouses] = await connection.execute('SELECT * FROM prod_warehouse INNER JOIN warehouses ON warehouses.id=prod_warehouse.warehouse_id WHERE product_id = ?',
+            [id]);
+        res.status(200).send({ ...row, warehouses });
     } catch (error) {
         res.status(400).send(error.message);
     }
@@ -42,16 +27,11 @@ export const getProductId = (req, res) => {
 
 //Create
 //POST an products
-export const createProduct = (req, res) => {
+export const createProduct = async (req, res) => {
     const product = req?.body;
     try {
-        connection.query('INSERT INTO products SET ?', { ...product, unallocated: product?.quantity }, (err) => {
-            if (err) {
-                res.status(400).send({error: "Operation Failed!"});
-                return
-            }
-            res.status(200).send('Completed successfully!');
-        })
+        await connection.query('INSERT INTO products SET ?', [{ ...product, unallocated: product?.quantity }]);
+        res.status(200).send('Completed successfully!');
     } catch (error) {
         res.status(400).send(error.message);
     }
@@ -59,71 +39,37 @@ export const createProduct = (req, res) => {
 
 //Delete
 //DELETE an products
-export const deleteProduct = (req, res) => {
+export const deleteProduct = async (req, res) => {
     const { id } = req?.params;
     try {
-        connection.query('DELETE FROM prod_warehouse WHERE product_id = ?', id, (err) => {
-            if (err) {
-                res.status(400).send({error: "Operation Failed!"});
-                return
-            }
-            connection.query('DELETE FROM products WHERE id = ?', id, (error) => {
-                if (error) {
-                    res.status(400).send({error: "Operation Failed!"});
-                    return
-                }
-                res.status(200).send('Completed successfully !');
-            })
-        })
+        await connection.execute('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
+        await connection.beginTransaction();
+        await connection.execute('DELETE FROM prod_warehouse WHERE product_id = ?', [id]);
+        await connection.execute('DELETE FROM products WHERE id = ?', [id]);
+        connection.commit();
+        res.status(200).send('Completed successfully !');
     } catch (error) {
         res.status(400).send(error.message);
+        connection.rollback();
     }
 }
 
 
 //Update
 //PUT an product
-export const updateProduct = (req, res) => {
+export const updateProduct = async (req, res) => {
     const { id } = req?.params;
     const { name, category, barcode, production_date, quantity } = req?.body;
-    console.log(req?.body)
     try {
-        connection.query('UPDATE products SET name = ?, category = ?,  barcode = ?,' +
+        await connection.execute('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
+        await connection.beginTransaction();
+        await connection.execute('UPDATE products SET name = ?, category = ?,  barcode = ?,' +
             'production_date = ?, unallocated = unallocated + ? - quantity, quantity = ?  WHERE `id` = ?',
-            [name, category, barcode, production_date, quantity, quantity, id],
-            (err) => {
-                if (err) {
-                    res.status(400).send({error: "Operation Failed!"});
-                    return
-                }
-                res.status(200).send('Completed successfully !');
-            })
+            [name, category, barcode, production_date, quantity, quantity, id]);
+        connection.commit();
+        res.status(200).send('Completed successfully !');
     } catch (error) {
         res.status(400).send(error.message);
+        connection.rollback();
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -10,6 +10,7 @@ import { PRODUCTS_EXPANDED_TABLE_COLUMS } from "../../constans/UIConstans";
 import { deleteItemFromWarehouse, getProduct } from "../../utils/ApiUtils";
 import { AiFillDelete } from 'react-icons/ai'
 import { ExpandedStyles } from './Style';
+import { useRouteLoaderData } from "react-router-dom";
 
 
 function ExpandedComponent(props) {
@@ -20,7 +21,7 @@ function ExpandedComponent(props) {
 
     useEffect(() => {
         loadData();
-    }, [open, deleteItemIds]);
+    }, [open, deleteItemIds, props.load]);
 
 
     const handleClose = () => {
@@ -49,12 +50,13 @@ function ExpandedComponent(props) {
             setData(data.filter(item => item.product_id !== prodId));
             setOpen(false);
             setDeleteItemIds({});
+            props.reloadData();
         }
     }
 
     const loadData = async () => {
         const result = await getProduct(props.data.id);
-        setData(result.data.products);
+        setData(result.data.warehouses);
     }
 
     return (
@@ -64,6 +66,7 @@ function ExpandedComponent(props) {
                 data={data}
                 responsive
                 customStyles={ExpandedStyles}
+                noDataComponent={<div> No warehouses to show</div>}
             />
             <Dialog open={open} onClose={handleClose}>
                 <DialogTitle> Confirm if you want to delete Item? </DialogTitle>

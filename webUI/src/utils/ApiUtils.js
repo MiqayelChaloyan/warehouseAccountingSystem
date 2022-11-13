@@ -1,6 +1,5 @@
 import axios from 'axios';
-
-import { ENDPOINTS, BASE_URL } from '../constans/ApiConstans'
+import { ENDPOINTS, BASE_URL } from '../constans/ApiConstans';
 
 export async function getWarehouses() {
     return axios.get(`${BASE_URL}${ENDPOINTS.warehouses}`)
@@ -46,8 +45,6 @@ export async function deleteProduct(id) {
     return axios.delete(`${BASE_URL}${ENDPOINTS.product}${id}`)
 }
 
-
-/////
 export async function transferProduct(id, body) {
     return await axios.post(`${BASE_URL}${ENDPOINTS.transferProd}${id}`, body)
 }

@@ -64,6 +64,7 @@ function ExpandedComponent(props) {
                 data={data}
                 responsive
                 customStyles={ExpandedStyles}
+                noDataComponent={<div> No products to show</div>}
             />
             <Dialog open={open} onClose={handleClose}>
                 <DialogTitle> Confirm if you want to delete item? </DialogTitle>
